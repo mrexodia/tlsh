@@ -60,7 +60,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#ifdef _MSC_VER
+#include <WinFunctions.h>
+#else
 #include <dirent.h>
+#endif // _MSC_VER
 
 #include "tlsh.h"
 #include "input_desc.h"

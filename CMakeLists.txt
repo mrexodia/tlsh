@@ -120,63 +120,33 @@ file(APPEND include/tlsh_version.h
   "#define TLSH_DISTANCE_PARAMETERS ${TLSH_DISTANCE_PARAMETERS}\n")
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL Debug)
-    if(CMAKE_COMPILER_IS_GNUCXX)
-        set(CMAKE_CXX_FLAGS "-g")
-    endif()
-else(CMAKE_BUILD_TYPE STREQUAL Debug)
-    if(MSVC)
-        set(CMAKE_CXX_FLAGS "/O2")        ## Optimize
-    else(MSVS)
-        set(CMAKE_CXX_FLAGS "-O3")
-    endif()
-endif(CMAKE_BUILD_TYPE STREQUAL Debug)
-
-if(MSVC)
-    add_definitions(-DWINDOWS -DTLSH_LIB)
-    include_directories(Windows)
-endif()
-
-# user can override CXX; make sure tests link and load properly regardless of LD_LIBRARY_PATH
-if(CMAKE_COMPILER_IS_GNUCXX)
-    # issue #116 Library will not compile on CENTOS 7
-    # set(CMAKE_EXE_LINKER_FLAGS "-static-libstdc++")
-    set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc")
-endif()
-
-# from https://stackoverflow.com/questions/5395309/how-do-i-force-cmake-to-include-pthread-option-during-compilation
-set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-# This flag seems to only be for older versions of CMake, such as https://cmake.org/cmake/help/v3.2/module/FindThreads.html
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads REQUIRED)
-
-enable_testing()
-
-include_directories(include)
-add_subdirectory(src)
-add_subdirectory(test)
-add_subdirectory(utils)
-add_subdirectory(Testing)
-
-if(MSVC)
-    add_subdirectory(Windows)
-endif()
-
-set(CPACK_GENERATOR "TGZ")
-set(CPACK_SOURCE_GENERATOR "TGZ")
-set(CPACK_SOURCE_PACKAGE_FILE_NAME "TLSH-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
-set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
-set(CPACK_SOURCE_IGNORE_FILES
-"~$"
-"^${PROJECT_SOURCE_DIR}/bin/"
-"^${PROJECT_SOURCE_DIR}/lib/"
-"^${PROJECT_SOURCE_DIR}/build/"
-"^${PROJECT_SOURCE_DIR}/py_ext/data/"
-"^${PROJECT_SOURCE_DIR}/py_ext/build/"
-"^${PROJECT_SOURCE_DIR}/Testing/tmp/"
-"^${PROJECT_SOURCE_DIR}/CMakeFiles/"
+set(TLSH_SRCS
+  src/tlsh.cpp
+  src/tlsh_impl.cpp
+  src/tlsh_util.cpp
+  src/input_desc.cpp
+  src/shared_file_functions.cpp
 )
-include(CPack)
 
+add_library(tlsh_static STATIC ${TLSH_SRCS})
+target_include_directories(tlsh_static PUBLIC include)
+target_compile_definitions(tlsh_static PUBLIC
+  TLSH_EXPORTS
+  TLSH_LIB
+)
+set_target_properties(tlsh_static PROPERTIES OUTPUT_NAME tlsh)
+
+if(MSVC)
+  target_compile_definitions(tlsh_static PRIVATE WINDOWS)
+  target_compile_definitions(tlsh_static PUBLIC TLSH_WINDOWS)
+  target_compile_definitions(tlsh_static PRIVATE _CRT_SECURE_NO_WARNINGS)
+  target_include_directories(tlsh_static PUBLIC Windows)
+endif()
+
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  install(TARGETS tlsh_static             DESTINATION lib)
+  install(FILES include/tlsh.h DESTINATION include/tlsh)
+  install(FILES include/tlsh_version.h DESTINATION include/tlsh)
+  # Enable folder support
+	set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+endif()

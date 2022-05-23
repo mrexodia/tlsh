@@ -11,7 +11,7 @@
 #define TLSH_HASH		"compact hash"
 #define TLSH_CHECKSUM		"1 byte checksum"
 
-#define buckets			128
+#define TLSH_BUCKETS 128
 #define TLSH_CHECKSUM_LEN	1
 #define EFF_BUCKETS		128
 #define CODE_SIZE		32

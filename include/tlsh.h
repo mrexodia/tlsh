@@ -67,7 +67,7 @@
 #define	TLSH_OPTION_PRIVATE		8
 #define	TLSH_OPTION_THREADED		16
 
-#if defined WINDOWS || defined MINGW
+#if defined _WIN32 || defined MINGW
 #include "tlsh_win_version.h"
 #else
 #include "tlsh_version.h"
@@ -112,7 +112,7 @@ class TlshImpl;
 
 #define TLSH_STRING_BUFFER_LEN (TLSH_STRING_LEN_REQ+1)
 
-#ifdef WINDOWS
+#ifdef TLSH_WINDOWS
 // 27/Nov/2020
 // #include <WinFunctions.h>
 	#define TLSH_API
